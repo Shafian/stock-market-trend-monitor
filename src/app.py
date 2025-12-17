@@ -1,35 +1,36 @@
-from flask import Flask, request
-import random
+from flask import Flask, request, render_template_string
+from database import init_db, fetch_stock_price, save_stock_price
 
 app = Flask(__name__)
+init_db()
 
-@app.route("/", methods=["GET"])
-def home():
-    return """
-        <h1>Stock Market Trend Monitor</h1>
-        <p>Enter a stock symbol to see a simple trend analysis.</p>
+@app.route("/", methods=["GET", "POST"])
+def index():
+    if request.method == "POST":
+        symbol = request.form["symbol"]
+        price = fetch_stock_price(symbol)
 
-        <form action="/analyze" method="POST">
-            <input name="symbol" placeholder="e.g. AAPL" required>
-            <button type="submit">Analyze</button>
-        </form>
-    """
+        if price is not None:
+            save_stock_price(symbol, price)
+            trend = "Upward trend (bullish) 📈"
+        else:
+            trend = "Data unavailable ❌"
 
-@app.route("/analyze", methods=["POST"])
-def analyze():
-    symbol = request.form.get("symbol", "").upper()
-
-    trends = [
-        "📈 Upward trend (bullish)",
-        "📉 Downward trend (bearish)",
-        "➖ Stable trend"
-    ]
-
-    trend_result = random.choice(trends)
-
-    return f"""
-        <h2>Analysis Result</h2>
-        <p>You entered stock symbol: <strong>{symbol}</strong></p>
-        <p>Trend: {trend_result}</p>
+        return f"""
+        <h1>Analysis Result</h1>
+        <p>You entered stock symbol: <b>{symbol.upper()}</b></p>
+        <p>Current Price: ${price}</p>
+        <p>Trend: {trend}</p>
         <a href="/">Go back</a>
+        """
+
+    return """
+    <h1>Stock Market Trend Monitor</h1>
+    <form method="post">
+        <input name="symbol" placeholder="Enter stock symbol (AAPL)">
+        <button type="submit">Analyze</button>
+    </form>
     """
+
+if __name__ == "__main__":
+    app.run()
