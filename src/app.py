@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request
 from database import init_db, fetch_stock_price, save_stock_price
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="templates")
 
 # Initialize database on startup
 init_db()
