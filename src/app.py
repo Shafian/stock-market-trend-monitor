@@ -1,36 +1,51 @@
-from flask import Flask, request, render_template_string
+from flask import Flask, render_template, request
 from database import init_db, fetch_stock_price, save_stock_price
 
 app = Flask(__name__)
+
+# Initialize database on startup
 init_db()
 
-@app.route("/", methods=["GET", "POST"])
+
+@app.route("/", methods=["GET"])
 def index():
-    if request.method == "POST":
-        symbol = request.form["symbol"]
-        price = fetch_stock_price(symbol)
+    return render_template("index.html")
 
-        if price is not None:
-            save_stock_price(symbol, price)
-            trend = "Upward trend (bullish) 📈"
-        else:
-            trend = "Data unavailable ❌"
 
-        return f"""
-        <h1>Analysis Result</h1>
-        <p>You entered stock symbol: <b>{symbol.upper()}</b></p>
-        <p>Current Price: ${price}</p>
-        <p>Trend: {trend}</p>
-        <a href="/">Go back</a>
-        """
+@app.route("/analyze", methods=["POST"])
+def analyze():
+    symbol = request.form.get("symbol", "").upper().strip()
 
-    return """
-    <h1>Stock Market Trend Monitor</h1>
-    <form method="post">
-        <input name="symbol" placeholder="Enter stock symbol (AAPL)">
-        <button type="submit">Analyze</button>
-    </form>
-    """
+    if not symbol:
+        return render_template(
+            "result.html",
+            symbol="",
+            trend="No stock symbol entered"
+        )
+
+    # Fetch price from Yahoo Finance API
+    price = fetch_stock_price(symbol)
+
+    # Handle API failure or invalid symbol
+    if price is None:
+        return render_template(
+            "result.html",
+            symbol=symbol,
+            trend="Could not fetch stock price (invalid symbol or API error)"
+        )
+
+    # Save to database
+    save_stock_price(symbol, price)
+
+    # Simple trend logic (placeholder)
+    trend = "📈 Upward trend (bullish)"
+
+    return render_template(
+        "result.html",
+        symbol=symbol,
+        trend=trend
+    )
+
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
