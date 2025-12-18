@@ -1,9 +1,9 @@
 from flask import Flask, render_template, request
-from .database import init_db, fetch_stock_price, save_stock_price
+from src.database import init_db, fetch_stock_price, save_stock_price
 
 app = Flask(__name__, template_folder="templates")
 
-# Initialize database on startup
+# Initialize database
 init_db()
 
 
@@ -23,22 +23,18 @@ def analyze():
             trend="No stock symbol entered"
         )
 
-    # Fetch price from Yahoo Finance API
     price = fetch_stock_price(symbol)
 
-    # Handle API failure or invalid symbol
     if price is None:
         return render_template(
             "result.html",
             symbol=symbol,
-            trend="Could not fetch stock price (invalid symbol or API error)"
+            trend="Could not fetch stock price (API error or invalid symbol)"
         )
 
-    # Save to database
     save_stock_price(symbol, price)
 
-    # Simple trend logic (placeholder)
-    trend = "📈 Upward trend (bullish)"
+    trend = f"📈 Current price: ${price}"
 
     return render_template(
         "result.html",
@@ -48,4 +44,4 @@ def analyze():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
