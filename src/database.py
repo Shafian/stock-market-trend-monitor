@@ -98,3 +98,29 @@ def get_last_searched_symbol():
     conn.close()
 
     return row[0] if row else None
+
+def get_total_searches():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT COUNT(*) FROM stock_data")
+    count = cursor.fetchone()[0]
+
+    conn.close()
+    return count
+
+
+def get_last_symbol():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT symbol FROM stock_data ORDER BY timestamp DESC LIMIT 1"
+    )
+    result = cursor.fetchone()
+
+    conn.close()
+
+    if result:
+        return result[0]
+    return None

@@ -5,7 +5,7 @@ from .database import (
     save_stock_price,
     get_average_price,
     get_total_searches,
-    get_last_searched_symbol
+    get_last_symbol
 )
 
 app = Flask(__name__, template_folder="templates")
@@ -17,13 +17,11 @@ init_db()
 @app.route("/", methods=["GET"])
 def index():
     total_searches = get_total_searches()
-    last_symbol = get_last_searched_symbol()
+    last_symbol = get_last_symbol()
 
     average_price = None
     if last_symbol:
-        avg = get_average_price(last_symbol)
-        if avg:
-            average_price = f"${avg:.2f}"
+        average_price = get_average_price(last_symbol)
 
     return render_template(
         "index.html",
