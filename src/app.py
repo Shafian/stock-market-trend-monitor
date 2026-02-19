@@ -1,9 +1,9 @@
 from flask import Flask, render_template, request
-from database import init_db, fetch_stock_price, save_stock_price, get_average_price
+from src.database import init_db, fetch_stock_price, save_stock_price, get_average_price
 
 app = Flask(__name__, template_folder="templates")
 
-# Initialize database
+# Initialize database on startup
 init_db()
 
 
@@ -20,35 +20,29 @@ def analyze():
         return render_template(
             "result.html",
             symbol="",
-            trend="No stock symbol entered",
-            average=None
+            trend="No stock symbol entered"
         )
 
+    # Fetch current price from API
     price = fetch_stock_price(symbol)
 
     if price is None:
         return render_template(
             "result.html",
             symbol=symbol,
-            trend="Could not fetch stock price (API error or invalid symbol)",
-            average=None
+            trend="Could not fetch stock price (API error or invalid symbol)"
         )
 
-    # Save price to database
+    # Save to database
     save_stock_price(symbol, price)
 
     # Get average price from database
-    average_price = get_average_price(symbol)
+    avg_price = get_average_price(symbol)
 
-    trend = f"📈 Current price: ${price}"
+    trend = f"📈 Current price: ${price} | Average price: ${avg_price:.2f}"
 
     return render_template(
         "result.html",
         symbol=symbol,
-        trend=trend,
-        average=average_price
+        trend=trend
     )
-
-
-if __name__ == "__main__":
-    app.run()
