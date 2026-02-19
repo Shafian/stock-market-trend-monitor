@@ -57,3 +57,20 @@ def save_stock_price(symbol, price):
 
     conn.commit()
     conn.close()
+
+def get_average_price(symbol):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT AVG(price) FROM stock_data WHERE symbol = ?",
+        (symbol,)
+    )
+
+    result = cursor.fetchone()
+    conn.close()
+
+    if result and result[0]:
+        return round(result[0], 2)
+
+    return None
