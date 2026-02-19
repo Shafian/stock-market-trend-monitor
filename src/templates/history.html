@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Search History</h2>
+
+<table>
+    <tr>
+        <th>Symbol</th>
+        <th>Price</th>
+        <th>Date</th>
+    </tr>
+    {% for item in history %}
+    <tr>
+        <td>{{ item.symbol }}</td>
+        <td>{{ item.price }}</td>
+        <td>{{ item.date }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

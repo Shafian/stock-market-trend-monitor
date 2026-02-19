@@ -74,3 +74,27 @@ def get_average_price(symbol):
         return round(result[0], 2)
 
     return None
+
+def get_total_searches():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT COUNT(*) FROM stock_data")
+    count = cursor.fetchone()[0]
+
+    conn.close()
+    return count
+
+
+def get_last_searched_symbol():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT symbol FROM stock_data ORDER BY id DESC LIMIT 1"
+    )
+
+    row = cursor.fetchone()
+    conn.close()
+
+    return row[0] if row else None

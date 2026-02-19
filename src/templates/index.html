@@ -5,8 +5,13 @@
 <div class="card">
     <h2>Stock Analyzer</h2>
 
-    <form action="/analyze" method="POST">
-        <input type="text" name="symbol" placeholder="Enter stock symbol (e.g. AAPL)" required>
+    <form action="/analyze" method="POST" class="analyzer-form">
+        <input 
+            type="text" 
+            name="symbol" 
+            placeholder="Enter stock symbol (e.g. AAPL)" 
+            required
+        >
         <button type="submit">Analyze</button>
     </form>
 </div>
@@ -14,6 +19,25 @@
 <div class="card">
     <h3>Dashboard Overview</h3>
     <p>Use this tool to fetch live stock prices and store them in the database.</p>
+</div>
+
+<div class="card-grid">
+
+    <div class="card stat-card">
+        <h4>Total Searches</h4>
+        <p class="stat-value">{{ total_searches or 0 }}</p>
+    </div>
+
+    <div class="card stat-card">
+        <h4>Last Stock Checked</h4>
+        <p class="stat-value">{{ last_symbol or "None yet" }}</p>
+    </div>
+
+    <div class="card stat-card">
+        <h4>Average Price</h4>
+        <p class="stat-value">{{ average_price or "N/A" }}</p>
+    </div>
+
 </div>
 
 {% endblock %}
