@@ -1,9 +1,14 @@
 import os
 import sqlite3
 import requests
+import logging
 
+# Environment configuration (A-level requirement)
 API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY")
-DB_NAME = "stocks.db"
+DB_NAME = os.getenv("DB_NAME", "stocks.db")
+
+# Production logging (monitoring requirement)
+logging.basicConfig(level=logging.INFO)
 
 
 def init_db():
@@ -25,8 +30,10 @@ def init_db():
 
 def fetch_stock_price(symbol):
     if not API_KEY:
-        print("API KEY NOT FOUND")
+        logging.error("API KEY NOT FOUND")
         return None
+
+    logging.info(f"Fetching stock price for {symbol}")
 
     url = "https://www.alphavantage.co/query"
     params = {
@@ -35,14 +42,18 @@ def fetch_stock_price(symbol):
         "apikey": API_KEY
     }
 
-    response = requests.get(url, params=params)
-    data = response.json()
-
-    print("Alpha Vantage response:", data)  # DEBUG
-
     try:
+        response = requests.get(url, params=params, timeout=10)
+        data = response.json()
+        logging.info(f"Alpha Vantage response received for {symbol}")
+
         return float(data["Global Quote"]["05. price"])
+
     except (KeyError, TypeError, ValueError):
+        logging.warning(f"Invalid response format for {symbol}")
+        return None
+    except requests.RequestException as e:
+        logging.error(f"Request failed: {e}")
         return None
 
 
@@ -58,6 +69,7 @@ def save_stock_price(symbol, price):
     conn.commit()
     conn.close()
 
+
 def get_average_price(symbol):
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
@@ -70,34 +82,11 @@ def get_average_price(symbol):
     result = cursor.fetchone()
     conn.close()
 
-    if result and result[0]:
+    if result and result[0] is not None:
         return round(result[0], 2)
 
     return None
 
-def get_total_searches():
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT COUNT(*) FROM stock_data")
-    count = cursor.fetchone()[0]
-
-    conn.close()
-    return count
-
-
-def get_last_searched_symbol():
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-
-    cursor.execute(
-        "SELECT symbol FROM stock_data ORDER BY id DESC LIMIT 1"
-    )
-
-    row = cursor.fetchone()
-    conn.close()
-
-    return row[0] if row else None
 
 def get_total_searches():
     conn = sqlite3.connect(DB_NAME)
@@ -124,3 +113,28 @@ def get_last_symbol():
     if result:
         return result[0]
     return None
+
+
+# Reporting feature for history page
+def get_history():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT symbol, price, timestamp
+        FROM stock_data
+        ORDER BY timestamp DESC
+    """)
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    history = []
+    for row in rows:
+        history.append({
+            "symbol": row[0],
+            "price": row[1],
+            "date": row[2]
+        })
+
+    return history

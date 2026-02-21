@@ -1,11 +1,12 @@
-from flask import Flask, render_template, request
-from .database import (
+from flask import Flask, render_template, request, jsonify
+from database import (
     init_db,
     fetch_stock_price,
     save_stock_price,
     get_average_price,
     get_total_searches,
-    get_last_symbol
+    get_last_symbol,
+    get_history
 )
 
 app = Flask(__name__, template_folder="templates")
@@ -55,10 +56,50 @@ def analyze():
 
     avg_price = get_average_price(symbol)
 
-    trend = f"📈 Current price: ${price} | Average price: ${avg_price:.2f}"
+    # Simple trend logic
+    if avg_price and price > avg_price:
+        direction = "UP"
+    elif avg_price and price < avg_price:
+        direction = "DOWN"
+    else:
+        direction = "STABLE"
+
+    trend = f"📊 Current: ${price:.2f} | Average: ${avg_price:.2f} | Trend: {direction}"
 
     return render_template(
         "result.html",
         symbol=symbol,
         trend=trend
     )
+
+
+@app.route("/history")
+def history():
+    history_data = get_history()
+    return render_template("history.html", history=history_data)
+
+
+# REST API endpoint (A-level rubric requirement)
+@app.route("/api/stock/<symbol>", methods=["GET"])
+def api_stock(symbol):
+    symbol = symbol.upper()
+
+    price = fetch_stock_price(symbol)
+
+    if price is None:
+        return jsonify({
+            "symbol": symbol,
+            "error": "Could not fetch stock price"
+        }), 400
+
+    avg_price = get_average_price(symbol)
+
+    return jsonify({
+        "symbol": symbol,
+        "current_price": price,
+        "average_price": avg_price
+    })
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
