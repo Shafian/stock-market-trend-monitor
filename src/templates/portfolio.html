@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+    <h2>💰 Portfolio Simulator</h2>
+    <p>Simulate how your investment would have grown over time.</p>
+</div>
+
+<div class="card">
+    <form method="POST">
+
+        <label>Select Stock:</label>
+        <select name="symbol" required>
+            {% for sym in all_symbols %}
+                <option value="{{ sym }}"
+                    {% if sym == selected_symbol %}selected{% endif %}>
+                    {{ sym }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <br><br>
+
+        <label>Investment Amount ($):</label>
+        <input 
+            type="number"
+            name="investment"
+            value="{{ investment_amount }}"
+            required
+        >
+
+        <br><br>
+
+        <button type="submit">Simulate</button>
+    </form>
+</div>
+
+{% if portfolio_values %}
+
+<div class="card-grid">
+
+    <div class="card stat-card">
+        <h4>Initial Investment</h4>
+        <p class="stat-value">${{ investment_amount }}</p>
+    </div>
+
+    <div class="card stat-card">
+        <h4>Profit / Loss</h4>
+        <p class="stat-value">
+            {% if profit_loss > 0 %}
+                <span style="color:green;">+${{ profit_loss }}</span>
+            {% elif profit_loss < 0 %}
+                <span style="color:red;">${{ profit_loss }}</span>
+            {% else %}
+                $0
+            {% endif %}
+        </p>
+    </div>
+
+    <div class="card stat-card">
+        <h4>Return (%)</h4>
+        <p class="stat-value">
+            {% if percent_return > 0 %}
+                <span style="color:green;">+{{ percent_return }}%</span>
+            {% elif percent_return < 0 %}
+                <span style="color:red;">{{ percent_return }}%</span>
+            {% else %}
+                0%
+            {% endif %}
+        </p>
+    </div>
+
+</div>
+
+<div class="card" style="margin-top:20px;">
+    <h3>📈 Portfolio Value Over Time</h3>
+
+    <canvas
+        id="portfolioChart"
+        data-labels='{{ dates | tojson | safe }}'
+        data-values='{{ portfolio_values | tojson | safe }}'
+    ></canvas>
+</div>
+
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+const canvas = document.getElementById("portfolioChart");
+
+if (canvas) {
+    const labels = JSON.parse(canvas.dataset.labels || "[]");
+    const values = JSON.parse(canvas.dataset.values || "[]");
+
+    new Chart(canvas.getContext("2d"), {
+        type: "line",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Portfolio Value ($)",
+                data: values,
+                borderColor: "#16a34a",
+                backgroundColor: "rgba(22,163,74,0.1)",
+                tension: 0.3,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+}
+</script>
+
+{% endblock %}

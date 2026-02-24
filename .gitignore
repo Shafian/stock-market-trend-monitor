@@ -1,3 +1,8 @@
 stocks.db
 venv/
 __pycache__/
+*.pyc
+.DS_Store
+stocks.db
+.pytest_cache/
+.env

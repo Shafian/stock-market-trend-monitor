@@ -1,20 +1,69 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Search History</h2>
 
-<table>
-    <tr>
-        <th>Symbol</th>
-        <th>Price</th>
-        <th>Date</th>
-    </tr>
-    {% for item in history %}
-    <tr>
-        <td>{{ item.symbol }}</td>
-        <td>{{ item.price }}</td>
-        <td>{{ item.date }}</td>
-    </tr>
-    {% endfor %}
-</table>
+<div class="card">
+    <h2>📜 Search History</h2>
+    <p>View all previously searched stocks and their trend movement.</p>
+</div>
+
+<div class="card">
+    <table style="width:100%; border-collapse: collapse;">
+        <thead>
+            <tr style="background-color:#1f2937; color:white;">
+                <th style="padding:12px; text-align:left;">Symbol</th>
+                <th style="padding:12px; text-align:left;">Price</th>
+                <th style="padding:12px; text-align:left;">Trend</th>
+                <th style="padding:12px; text-align:left;">% Change</th>
+                <th style="padding:12px; text-align:left;">Date</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for item in history %}
+            <tr style="border-bottom:1px solid #ddd;">
+                
+                <td style="padding:10px; font-weight:bold;">
+                    {{ item["symbol"] }}
+                </td>
+
+                <td style="padding:10px;">
+                    ${{ "%.2f"|format(item["price"]) }}
+                </td>
+
+                <td style="padding:10px;">
+                    {% if item["trend"] == "UP" %}
+                        <span style="color:green; font-weight:bold;">📈 UP</span>
+                    {% elif item["trend"] == "DOWN" %}
+                        <span style="color:red; font-weight:bold;">📉 DOWN</span>
+                    {% else %}
+                        <span style="color:gray;">➖ STABLE</span>
+                    {% endif %}
+                </td>
+
+                <td style="padding:10px;">
+                    {% if item["percent_change"] > 0 %}
+                        <span style="color:green; font-weight:bold;">
+                            +{{ "%.2f"|format(item["percent_change"]) }}%
+                        </span>
+                    {% elif item["percent_change"] < 0 %}
+                        <span style="color:red; font-weight:bold;">
+                            {{ "%.2f"|format(item["percent_change"]) }}%
+                        </span>
+                    {% else %}
+                        <span style="color:gray;">
+                            0.00%
+                        </span>
+                    {% endif %}
+                </td>
+
+                <td style="padding:10px;">
+                    {{ item["date"] }}
+                </td>
+
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
 {% endblock %}

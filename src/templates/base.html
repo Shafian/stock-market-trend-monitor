@@ -96,9 +96,17 @@
 
 <div class="navbar">
     <div>
-        <a href="/">Dashboard</a>
-        <a href="/history">History</a>
         <a href="/about">About</a>
+        <a href="/">Dashboard</a>
+        <a href="/portfolio">Portfolio</a>
+        <a href="/history">History</a>
+
+    
+        {% if last_symbol %}
+            <a href="/analysis/{{ last_symbol }}">Analysis</a>
+        {% else %}
+            <a href="/analysis/SPY">Analysis</a>
+        {% endif %}
     </div>
     <div>
         Stock Market Monitor 📈

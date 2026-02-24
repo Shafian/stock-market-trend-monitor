@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card">
+  <h2>📊 Stock Analysis — {{ symbol }}</h2>
+  <p>Detailed price history, trend, and performance breakdown.</p>
+</div>
+
+<!-- SYMBOL SELECTOR -->
+<div class="card" style="margin-top:20px;">
+  <h3>Select Stock</h3>
+
+  <select id="symbolSelect" style="padding:8px; font-size:16px;">
+    {% for sym in all_symbols %}
+      <option value="{{ sym }}" {% if sym == symbol %}selected{% endif %}>
+        {{ sym }}
+      </option>
+    {% endfor %}
+  </select>
+</div>
+
+<!-- SUMMARY CARDS -->
+<div class="card-grid" style="margin-top:20px;">
+
+  <div class="card stat-card">
+    <h4>Current Price</h4>
+    <p class="stat-value">
+      {% if current_price %}
+        ${{ "%.2f"|format(current_price) }}
+      {% else %}
+        N/A
+      {% endif %}
+    </p>
+  </div>
+
+  <div class="card stat-card">
+    <h4>Latest % Change</h4>
+    <p class="stat-value">
+      {% if percent_change > 0 %}
+        <span style="color:green;">+{{ "%.2f"|format(percent_change) }}%</span>
+      {% elif percent_change < 0 %}
+        <span style="color:red;">{{ "%.2f"|format(percent_change) }}%</span>
+      {% else %}
+        0.00%
+      {% endif %}
+    </p>
+  </div>
+
+  <div class="card stat-card">
+    <h4>Trend</h4>
+    <p class="stat-value">
+      {% if trend == "UP" %}
+        <span style="color:green;">📈 UP</span>
+      {% elif trend == "DOWN" %}
+        <span style="color:red;">📉 DOWN</span>
+      {% else %}
+        ➖ STABLE
+      {% endif %}
+    </p>
+  </div>
+
+</div>
+
+<!-- CHART -->
+<div class="card" style="margin-top:20px;">
+  <h3>📈 Price Trend (Last 10 Records)</h3>
+
+  <canvas
+    id="priceChart"
+    data-labels='{{ dates | tojson | safe }}'
+    data-prices='{{ prices | tojson | safe }}'
+  ></canvas>
+</div>
+
+<!-- HISTORY TABLE -->
+<div class="card" style="margin-top:20px;">
+  <h3>📜 Full History</h3>
+
+  <table style="width:100%; border-collapse: collapse;">
+    <thead>
+      <tr style="background-color:#1f2937; color:white;">
+        <th style="padding:12px;">Price</th>
+        <th style="padding:12px;">Trend</th>
+        <th style="padding:12px;">% Change</th>
+        <th style="padding:12px;">Date</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for item in history %}
+      <tr style="border-bottom:1px solid #ddd;">
+        <td style="padding:10px;">${{ "%.2f"|format(item["price"]) }}</td>
+        <td style="padding:10px;">
+          {% if item["trend"] == "UP" %}
+            <span style="color:green;">📈 UP</span>
+          {% elif item["trend"] == "DOWN" %}
+            <span style="color:red;">📉 DOWN</span>
+          {% else %}
+            ➖ STABLE
+          {% endif %}
+        </td>
+        <td style="padding:10px;">
+          {% if item["percent_change"] > 0 %}
+            <span style="color:green;">+{{ "%.2f"|format(item["percent_change"]) }}%</span>
+          {% elif item["percent_change"] < 0 %}
+            <span style="color:red;">{{ "%.2f"|format(item["percent_change"]) }}%</span>
+          {% else %}
+            0.00%
+          {% endif %}
+        </td>
+        <td style="padding:10px;">{{ item["date"] }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  const select = document.getElementById("symbolSelect");
+  select.addEventListener("change", function() {
+    window.location.href = "/analysis/" + this.value;
+  });
+
+  const canvas = document.getElementById("priceChart");
+  const labels = JSON.parse(canvas.dataset.labels || "[]");
+  const prices = JSON.parse(canvas.dataset.prices || "[]");
+
+  new Chart(canvas.getContext("2d"), {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [{
+        label: "{{ symbol }} Price",
+        data: prices,
+        borderColor: "#2563eb",
+        backgroundColor: "rgba(37, 99, 235, 0.1)",
+        tension: 0.3,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true
+    }
+  });
+</script>
+
+{% endblock %}

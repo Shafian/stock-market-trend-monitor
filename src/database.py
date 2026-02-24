@@ -39,12 +39,13 @@ def fetch_stock_price(symbol):
     params = {
         "function": "GLOBAL_QUOTE",
         "symbol": symbol,
-        "apikey": API_KEY
+        "apikey": API_KEY 
     }
 
     try:
         response = requests.get(url, params=params, timeout=10)
         data = response.json()
+        print(data)
         logging.info(f"Alpha Vantage response received for {symbol}")
 
         return float(data["Global Quote"]["05. price"])
@@ -123,18 +124,40 @@ def get_history():
     cursor.execute("""
         SELECT symbol, price, timestamp
         FROM stock_data
-        ORDER BY timestamp DESC
+        ORDER BY symbol, timestamp ASC
     """)
 
     rows = cursor.fetchall()
     conn.close()
 
     history = []
-    for row in rows:
+    previous_prices = {}
+
+    for symbol, price, timestamp in rows:
+        trend = "STABLE"
+        percent_change = 0.0
+
+        if symbol in previous_prices:
+            old_price = previous_prices[symbol]
+
+            if price > old_price:
+                trend = "UP"
+            elif price < old_price:
+                trend = "DOWN"
+
+            # Calculate percent change
+            if old_price != 0:
+                percent_change = ((price - old_price) / old_price) * 100
+
+        previous_prices[symbol] = price
+
         history.append({
-            "symbol": row[0],
-            "price": row[1],
-            "date": row[2]
+            "symbol": symbol,
+            "price": price,
+            "date": timestamp,
+            "trend": trend,
+            "percent_change": percent_change
         })
 
+    history.reverse()
     return history

@@ -35,9 +35,48 @@
 
     <div class="card stat-card">
         <h4>Average Price</h4>
-        <p class="stat-value">{{ average_price or "N/A" }}</p>
+        <p class="stat-value">
+            {% if average_price %}
+                ${{ "%.2f"|format(average_price) }}
+            {% else %}
+                N/A
+            {% endif %}
+        </p>
     </div>
 
 </div>
+
+{% if latest_three %}
+<div class="card" style="margin-top:20px;">
+    <h3>📊 Latest 3 Stock Searches</h3>
+
+    <table style="width:100%; border-collapse: collapse;">
+        <thead>
+            <tr style="border-bottom:1px solid #ddd;">
+                <th style="text-align:left;">Symbol</th>
+                <th style="text-align:left;">Price</th>
+                <th style="text-align:left;">Trend</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for item in latest_three %}
+            <tr style="border-bottom:1px solid #eee;">
+                <td>{{ item["symbol"] }}</td>
+                <td>${{ "%.2f"|format(item["price"]) }}</td>
+                <td>
+                    {% if item["trend"] == "UP" %}
+                        <span style="color:green; font-weight:bold;">📈 UP</span>
+                    {% elif item["trend"] == "DOWN" %}
+                        <span style="color:red; font-weight:bold;">📉 DOWN</span>
+                    {% else %}
+                        <span style="color:gray;">➖ STABLE</span>
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
 
 {% endblock %}
