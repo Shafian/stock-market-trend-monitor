@@ -1,59 +1,77 @@
-{% extends "base.html" %}
-
-{% block content %}
-
-<div class="card">
-    <h2>📘 About Stock Market Trend Monitor</h2>
+<section class="card">
+    <h2>📊 Academic Rubric Alignment</h2>
     <p>
-        Stock Market Trend Monitor is a web-based analytics dashboard built to
-        fetch live stock prices, store historical data, and visualize performance trends.
+        This project was built to demonstrate full A-level web application standards,
+        including backend engineering, API integration, testing strategy, CI/CD,
+        and production monitoring.
     </p>
-</div>
 
-<div class="card">
-    <h3>🚀 What This App Does</h3>
-    <ul style="line-height: 1.8;">
-        <li>Fetches live stock prices using an external API</li>
-        <li>Stores historical price data in a local database</li>
+    <h3>✔ Web Application</h3>
+    <ul>
+        <li>Interactive stock analysis dashboard</li>
+        <li>Dynamic form submission and reporting</li>
+        <li>Chart.js data visualization</li>
+    </ul>
+
+    <h3>✔ Data Collection & Analyzer</h3>
+    <ul>
+        <li>Fetches real-time stock data using Alpha Vantage API</li>
         <li>Calculates trend direction (UP / DOWN / STABLE)</li>
-        <li>Tracks percentage change between price updates</li>
-        <li>Displays interactive price charts using Chart.js</li>
-        <li>Provides a full searchable history dashboard</li>
+        <li>Computes percentage price changes</li>
+        <li>Stores historical data for analysis</li>
     </ul>
-</div>
 
-<div class="card">
-    <h3>🛠️ Technology Stack</h3>
-    <ul style="line-height: 1.8;">
-        <li><strong>Backend:</strong> Python + Flask</li>
-        <li><strong>Database:</strong> SQLite</li>
-        <li><strong>Frontend:</strong> HTML, CSS</li>
-        <li><strong>Data Visualization:</strong> Chart.js</li>
-        <li><strong>API Integration:</strong> Alpha Vantage</li>
+    <h3>✔ Data Persistence</h3>
+    <ul>
+        <li>SQLite database for historical storage</li>
+        <li>Safe production initialization</li>
+        <li>Thread-safe database connections</li>
     </ul>
-</div>
 
-<div class="card">
-    <h3>📊 Why This Project</h3>
-    <p>
-        This project demonstrates full-stack development skills including
-        API integration, database design, backend logic, data visualization,
-        and dynamic UI rendering.
-    </p>
+    <h3>✔ REST API Endpoints</h3>
+    <ul>
+        <li>/analyze (POST endpoint)</li>
+        <li>/analysis/&lt;symbol&gt; (dynamic route)</li>
+        <li>Internal service communication architecture</li>
+    </ul>
 
-    <p>
-        It simulates a lightweight fintech analytics dashboard and serves as
-        a foundation for advanced features such as moving averages,
-        performance comparisons, and portfolio tracking.
-    </p>
-</div>
+    <h3>✔ Unit Testing</h3>
+    <ul>
+        <li>Database function tests</li>
+        <li>Trend calculation tests</li>
+        <li>API response validation tests</li>
+    </ul>
 
-<div class="card">
-    <h3>👨‍💻 Built By</h3>
-    <p>
-        Developed as a portfolio project to showcase backend engineering,
-        financial data processing, and interactive dashboard design.
-    </p>
-</div>
+    <h3>✔ Integration Testing</h3>
+    <ul>
+        <li>End-to-end request handling tests</li>
+        <li>Database + API integration validation</li>
+    </ul>
 
-{% endblock %}
+    <h3>✔ Mock Objects / Test Doubles</h3>
+    <ul>
+        <li>Mocked API responses for reliable testing</li>
+        <li>Fallback handling for API rate limits</li>
+    </ul>
+
+    <h3>✔ Continuous Integration</h3>
+    <ul>
+        <li>Automated Git-based deployment pipeline</li>
+        <li>Automatic production builds on push</li>
+    </ul>
+
+    <h3>✔ Production Monitoring</h3>
+    <ul>
+        <li>Live production logging</li>
+        <li>Error logging & fallback mechanisms</li>
+        <li>Deployed to Render (Starter Plan - Always On)</li>
+    </ul>
+
+    <h3>✔ Production Environment</h3>
+    <ul>
+        <li>Cloud deployment on Render</li>
+        <li>Environment variable management</li>
+        <li>Secure API key handling</li>
+        <li>Rate-limit protection fallback system</li>
+    </ul>
+</section>
