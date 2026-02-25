@@ -3,16 +3,22 @@ import sqlite3
 import requests
 import logging
 
-# Environment configuration (A-level requirement)
 API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY")
-DB_NAME = os.getenv("DB_NAME", "stocks.db")
 
-# Production logging (monitoring requirement)
 logging.basicConfig(level=logging.INFO)
 
 
+def get_db_name():
+    # Read at runtime so tests can override via env var
+    return os.getenv("DB_NAME", "stocks.db")
+
+
+def get_conn():
+    return sqlite3.connect(get_db_name())
+
+
 def init_db():
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_conn()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -29,7 +35,9 @@ def init_db():
 
 
 def fetch_stock_price(symbol):
-    if not API_KEY:
+    api_key = os.getenv("ALPHA_VANTAGE_API_KEY")  # runtime read
+
+    if not api_key:
         logging.error("API KEY NOT FOUND")
         return None
 
@@ -39,13 +47,12 @@ def fetch_stock_price(symbol):
     params = {
         "function": "GLOBAL_QUOTE",
         "symbol": symbol,
-        "apikey": API_KEY 
+        "apikey": api_key
     }
 
     try:
         response = requests.get(url, params=params, timeout=10)
         data = response.json()
-        print(data)
         logging.info(f"Alpha Vantage response received for {symbol}")
 
         return float(data["Global Quote"]["05. price"])
@@ -59,7 +66,7 @@ def fetch_stock_price(symbol):
 
 
 def save_stock_price(symbol, price):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_conn()
     cursor = conn.cursor()
 
     cursor.execute(
@@ -72,7 +79,7 @@ def save_stock_price(symbol, price):
 
 
 def get_average_price(symbol):
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_conn()
     cursor = conn.cursor()
 
     cursor.execute(
@@ -90,7 +97,7 @@ def get_average_price(symbol):
 
 
 def get_total_searches():
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_conn()
     cursor = conn.cursor()
 
     cursor.execute("SELECT COUNT(*) FROM stock_data")
@@ -101,7 +108,7 @@ def get_total_searches():
 
 
 def get_last_symbol():
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_conn()
     cursor = conn.cursor()
 
     cursor.execute(
@@ -116,9 +123,17 @@ def get_last_symbol():
     return None
 
 
-# Reporting feature for history page
+def clear_all_data():
+    """Helpful for tests: wipes table completely."""
+    conn = get_conn()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM stock_data")
+    conn.commit()
+    conn.close()
+
+
 def get_history():
-    conn = sqlite3.connect(DB_NAME)
+    conn = get_conn()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -145,7 +160,6 @@ def get_history():
             elif price < old_price:
                 trend = "DOWN"
 
-            # Calculate percent change
             if old_price != 0:
                 percent_change = ((price - old_price) / old_price) * 100
 
