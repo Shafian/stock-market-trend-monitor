@@ -23,9 +23,10 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__, template_folder="templates")
 
-logger.info("Initializing database...")
-init_db()
-logger.info("Database initialized successfully.")
+with app.app_context():
+    logger.info("Initializing database...")
+    init_db()
+    logger.info("Database initialized successfully.")
 
 
 def log_stock_event(data):

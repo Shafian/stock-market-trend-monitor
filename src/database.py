@@ -14,7 +14,12 @@ def get_db_name():
 
 
 def get_conn():
-    return sqlite3.connect(get_db_name())
+    db_path = os.path.join(os.getcwd(), get_db_name())
+    return sqlite3.connect(
+        db_path,
+        timeout=5,
+        check_same_thread=False
+    )
 
 
 def init_db():
