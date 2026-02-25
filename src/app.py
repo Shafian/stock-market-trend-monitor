@@ -1,7 +1,7 @@
 import os
 import logging
 from flask import Flask, render_template, request, jsonify, redirect, url_for
-from database import (
+from src.database import (
     init_db,
     fetch_stock_price,
     save_stock_price,
@@ -10,7 +10,7 @@ from database import (
     get_last_symbol,
     get_history
 )
-from events import event_bus  
+from src.events import event_bus  
 
 
 logging.basicConfig(
