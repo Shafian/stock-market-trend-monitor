@@ -2,14 +2,12 @@ import os
 import sqlite3
 import requests
 import logging
-
-API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY")
+import random
 
 logging.basicConfig(level=logging.INFO)
 
 
 def get_db_name():
-    # Read at runtime so tests can override via env var
     return os.getenv("DB_NAME", "stocks.db")
 
 
@@ -39,12 +37,22 @@ def init_db():
     conn.close()
 
 
+def generate_fallback_price(symbol):
+    """
+    Generates a consistent simulated price per symbol.
+    This keeps your demo working even if API rate limits.
+    """
+    random.seed(symbol)
+    base = random.uniform(100, 300)
+    return round(base, 2)
+
+
 def fetch_stock_price(symbol):
-    api_key = os.getenv("ALPHA_VANTAGE_API_KEY")  # runtime read
+    api_key = os.getenv("ALPHA_VANTAGE_API_KEY")
 
     if not api_key:
-        logging.error("API KEY NOT FOUND")
-        return None
+        logging.warning("API KEY NOT FOUND — using fallback price.")
+        return generate_fallback_price(symbol)
 
     logging.info(f"Fetching stock price for {symbol}")
 
@@ -58,16 +66,28 @@ def fetch_stock_price(symbol):
     try:
         response = requests.get(url, params=params, timeout=10)
         data = response.json()
-        logging.info(f"Alpha Vantage response received for {symbol}")
 
-        return float(data["Global Quote"]["05. price"])
+        logging.info(f"Alpha Vantage raw response: {data}")
 
-    except (KeyError, TypeError, ValueError):
-        logging.warning(f"Invalid response format for {symbol}")
-        return None
+        # Proper success case
+        if (
+            "Global Quote" in data and
+            "05. price" in data["Global Quote"] and
+            data["Global Quote"]["05. price"]
+        ):
+            return float(data["Global Quote"]["05. price"])
+
+        # Rate limit or unexpected structure
+        logging.warning(f"Invalid API response format for {symbol}. Using fallback.")
+        return generate_fallback_price(symbol)
+
     except requests.RequestException as e:
-        logging.error(f"Request failed: {e}")
-        return None
+        logging.error(f"Request failed: {e}. Using fallback.")
+        return generate_fallback_price(symbol)
+
+    except Exception as e:
+        logging.error(f"Unexpected error: {e}. Using fallback.")
+        return generate_fallback_price(symbol)
 
 
 def save_stock_price(symbol, price):
@@ -129,7 +149,6 @@ def get_last_symbol():
 
 
 def clear_all_data():
-    """Helpful for tests: wipes table completely."""
     conn = get_conn()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM stock_data")
