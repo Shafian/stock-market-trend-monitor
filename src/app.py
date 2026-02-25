@@ -1,3 +1,5 @@
+import os
+import logging
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 from database import (
     init_db,
@@ -8,14 +10,38 @@ from database import (
     get_last_symbol,
     get_history
 )
+from events import event_bus  
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
+
+logger = logging.getLogger(__name__)
+
 
 app = Flask(__name__, template_folder="templates")
 
-# Initialize database on startup
+logger.info("Initializing database...")
 init_db()
+logger.info("Database initialized successfully.")
 
 
-# ✅ Make last_symbol available globally (for navbar Analysis link)
+def log_stock_event(data):
+    logger.info(
+        f"EVENT: Stock analyzed -> {data['symbol']} at {data['price']}"
+    )
+
+event_bus.subscribe("stock_analyzed", log_stock_event)
+
+
+@app.route("/health")
+def health():
+    logger.info("Health check requested.")
+    return {"status": "healthy"}, 200
+
+
 @app.context_processor
 def inject_last_symbol():
     return {
@@ -25,6 +51,8 @@ def inject_last_symbol():
 
 @app.route("/", methods=["GET"])
 def index():
+    logger.info("Homepage accessed.")
+
     total_searches = get_total_searches()
     last_symbol = get_last_symbol()
 
@@ -43,48 +71,77 @@ def index():
         latest_three=latest_three
     )
 
-
-# 🔥 UPDATED — Redirect directly to analysis page
 @app.route("/analyze", methods=["POST"])
 def analyze():
     symbol = request.form.get("symbol", "").upper().strip()
 
     if not symbol:
+        logger.warning("Analyze called with empty symbol.")
         return redirect(url_for("index"))
 
-    price = fetch_stock_price(symbol)
-    if price is None:
+    logger.info(f"Analyze request received for symbol: {symbol}")
+
+    try:
+        price = fetch_stock_price(symbol)
+
+        if price is None:
+            logger.warning(f"Price fetch failed for symbol: {symbol}")
+            return redirect(url_for("index"))
+
+        save_stock_price(symbol, price)
+        logger.info(f"Saved {symbol} price {price} to database.")
+
+        # 🔥 Publish event
+        event_bus.publish("stock_analyzed", {
+            "symbol": symbol,
+            "price": price
+        })
+
+    except Exception as e:
+        logger.error(f"Error processing symbol {symbol}: {e}")
         return redirect(url_for("index"))
 
-    save_stock_price(symbol, price)
-
-    # Immediately go to analysis page
     return redirect(url_for("analysis", symbol=symbol))
 
 
 @app.route("/api/stock/<symbol>")
 def api_stock(symbol):
     symbol = symbol.upper().strip()
+    logger.info(f"API request received for symbol: {symbol}")
 
-    price = fetch_stock_price(symbol)
-    if price is None:
+    try:
+        price = fetch_stock_price(symbol)
+
+        if price is None:
+            logger.warning(f"API price fetch failed for {symbol}")
+            return jsonify({
+                "error": "Could not fetch stock price",
+                "symbol": symbol
+            }), 400
+
+        save_stock_price(symbol, price)
+        avg_price = get_average_price(symbol)
+
+        # 🔥 Publish event for API usage too
+        event_bus.publish("stock_analyzed", {
+            "symbol": symbol,
+            "price": price
+        })
+
         return jsonify({
-            "error": "Could not fetch stock price",
-            "symbol": symbol
-        }), 400
+            "symbol": symbol,
+            "current_price": price,
+            "average_price": avg_price
+        })
 
-    save_stock_price(symbol, price)
-    avg_price = get_average_price(symbol)
-
-    return jsonify({
-        "symbol": symbol,
-        "current_price": price,
-        "average_price": avg_price
-    })
+    except Exception as e:
+        logger.error(f"API error for {symbol}: {e}")
+        return jsonify({"error": "Internal server error"}), 500
 
 
 @app.route("/history")
 def history():
+    logger.info("History page accessed.")
     history_data = get_history() or []
     return render_template("history.html", history=history_data)
 
@@ -92,13 +149,11 @@ def history():
 @app.route("/analysis/<symbol>")
 def analysis(symbol):
     symbol = symbol.upper()
+    logger.info(f"Analysis page accessed for symbol: {symbol}")
 
     history_data = get_history() or []
 
-    # All unique symbols for dropdown
     all_symbols = sorted(list({item["symbol"] for item in history_data}))
-
-    # Filter selected symbol history
     symbol_history = [item for item in history_data if item["symbol"] == symbol]
 
     chart_data = symbol_history[:10]
@@ -107,7 +162,6 @@ def analysis(symbol):
     prices = [item["price"] for item in chart_data]
     dates = [item["date"] for item in chart_data]
 
-    # Summary metrics
     current_price = prices[-1] if prices else None
     previous_price = prices[-2] if len(prices) > 1 else None
 
@@ -133,17 +187,17 @@ def analysis(symbol):
         trend=trend
     )
 
-
 @app.route("/about")
 def about():
+    logger.info("About page accessed.")
     return render_template("about.html")
 
 
 @app.route("/portfolio", methods=["GET", "POST"])
 def portfolio():
-    history_data = get_history() or []
+    logger.info("Portfolio page accessed.")
 
-    # All unique symbols from history
+    history_data = get_history() or []
     all_symbols = sorted(list({item["symbol"] for item in history_data}))
 
     selected_symbol = None
@@ -156,6 +210,7 @@ def portfolio():
 
     if request.method == "POST":
         selected_symbol = request.form.get("symbol")
+
         try:
             investment_amount = float(request.form.get("investment"))
         except:
@@ -182,6 +237,12 @@ def portfolio():
             if investment_amount > 0:
                 percent_return = round((profit_loss / investment_amount) * 100, 2)
 
+        logger.info(
+            f"Portfolio simulation for {selected_symbol} "
+            f"Investment: {investment_amount} "
+            f"Return: {percent_return}%"
+        )
+
     return render_template(
         "portfolio.html",
         all_symbols=all_symbols,
@@ -194,4 +255,6 @@ def portfolio():
     )
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.getenv("PORT", 5000))
+    logger.info(f"Starting application on port {port}")
+    app.run(host="0.0.0.0", port=port)
