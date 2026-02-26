@@ -1,83 +1,87 @@
 {% extends "base.html" %}
-
 {% block content %}
 
-<section class="card">
-    <h2>📊 Academic Rubric Alignment</h2>
-    <p>
-        This project was built to demonstrate full A-level web application standards,
-        including backend engineering, API integration, testing strategy, CI/CD,
-        and production monitoring.
+<div class="container">
+
+    <h2 class="page-title">📊 About Page</h2>
+
+    <p class="page-subtitle">
     </p>
 
-    <h3>✔ Web Application</h3>
-    <ul>
-        <li>Interactive stock analysis dashboard</li>
-        <li>Dynamic form submission and reporting</li>
-        <li>Chart.js data visualization</li>
-    </ul>
+    <div class="rubric-grid">
 
-    <h3>✔ Data Collection & Analyzer</h3>
-    <ul>
-        <li>Fetches real-time stock data using Alpha Vantage API</li>
-        <li>Calculates trend direction (UP / DOWN / STABLE)</li>
-        <li>Computes percentage price changes</li>
-        <li>Stores historical data for analysis</li>
-    </ul>
+        <!-- Web Application -->
+        <div class="rubric-card">
+            <h3>🚀 Web Application</h3>
+            <ul>
+                <li>Interactive stock dashboard</li>
+                <li>Dynamic stock analysis form</li>
+                <li>Chart.js data visualization</li>
+                <li>Portfolio management system</li>
+                <li>Historical report tracking</li>
+            </ul>
+        </div>
 
-    <h3>✔ Data Persistence</h3>
-    <ul>
-        <li>SQLite database for historical storage</li>
-        <li>Safe production initialization</li>
-        <li>Thread-safe database connections</li>
-    </ul>
+        <!-- Data Collection -->
+        <div class="rubric-card">
+            <h3>📈 Data Collection & Analyzer</h3>
+            <ul>
+                <li>Alpha Vantage API integration</li>
+                <li>Real-time stock price retrieval</li>
+                <li>Trend detection (UP / DOWN / STABLE)</li>
+                <li>Percentage change calculations</li>
+                <li>Stored historical analytics</li>
+            </ul>
+        </div>
 
-    <h3>✔ REST API Endpoints</h3>
-    <ul>
-        <li>/analyze (POST endpoint)</li>
-        <li>/analysis/&lt;symbol&gt; (dynamic route)</li>
-        <li>Internal service communication architecture</li>
-    </ul>
+        <!-- Data Persistence -->
+        <div class="rubric-card">
+            <h3>💾 Data Persistence</h3>
+            <ul>
+                <li>SQLite relational database</li>
+                <li>Thread-safe DB connections</li>
+                <li>Persistent stock history table</li>
+                <li>Portfolio storage</li>
+            </ul>
+        </div>
 
-    <h3>✔ Unit Testing</h3>
-    <ul>
-        <li>Database function tests</li>
-        <li>Trend calculation tests</li>
-        <li>API response validation tests</li>
-    </ul>
+        <!-- REST API -->
+        <div class="rubric-card">
+            <h3>🔌 REST API & Collaboration</h3>
+            <ul>
+                <li>/analyze (POST endpoint)</li>
+                <li>/analysis/&lt;symbol&gt;</li>
+                <li>Internal service architecture</li>
+                <li>Modular analyzer & database layers</li>
+            </ul>
+        </div>
 
-    <h3>✔ Integration Testing</h3>
-    <ul>
-        <li>End-to-end request handling tests</li>
-        <li>Database + API integration validation</li>
-    </ul>
+        <!-- Testing -->
+        <div class="rubric-card">
+            <h3>🧪 Testing</h3>
+            <ul>
+                <li>Unit tests (pytest)</li>
+                <li>Integration tests</li>
+                <li>Mock objects & test doubles</li>
+                <li>Automated test execution</li>
+            </ul>
+        </div>
 
-    <h3>✔ Mock Objects / Test Doubles</h3>
-    <ul>
-        <li>Mocked API responses for reliable testing</li>
-        <li>Fallback handling for API rate limits</li>
-    </ul>
+        <!-- DevOps -->
+        <div class="rubric-card">
+            <h3>⚙ DevOps & Production</h3>
+            <ul>
+                <li>CI pipeline (GitHub Actions)</li>
+                <li>Continuous integration</li>
+                <li>Production environment configuration</li>
+                <li>Production monitoring instrumentation</li>
+                <li>Event collaboration messaging</li>
+                <li>Continuous delivery readiness</li>
+            </ul>
+        </div>
 
-    <h3>✔ Continuous Integration</h3>
-    <ul>
-        <li>Automated Git-based deployment pipeline</li>
-        <li>Automatic production builds on push</li>
-    </ul>
+    </div>
 
-    <h3>✔ Production Monitoring</h3>
-    <ul>
-        <li>Live production logging</li>
-        <li>Error logging & fallback mechanisms</li>
-        <li>Deployed to Render (Starter Plan - Always On)</li>
-    </ul>
-
-    <h3>✔ Production Environment</h3>
-    <ul>
-        <li>Cloud deployment on Render</li>
-        <li>Environment variable management</li>
-        <li>Secure API key handling</li>
-        <li>Rate-limit protection fallback system</li>
-    </ul>
-</section>
+</div>
 
 {% endblock %}

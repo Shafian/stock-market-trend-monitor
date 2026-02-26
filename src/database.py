@@ -37,14 +37,43 @@ def init_db():
     conn.close()
 
 
+# 🔥 NEW: Get last stored price for symbol
+def get_last_price(symbol):
+    conn = get_conn()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT price FROM stock_data WHERE symbol = ? ORDER BY timestamp DESC LIMIT 1",
+        (symbol,)
+    )
+
+    result = cursor.fetchone()
+    conn.close()
+
+    if result:
+        return result[0]
+    return None
+
+
+# 🔥 NEW: Generate realistic fallback movement
 def generate_fallback_price(symbol):
     """
-    Generates a consistent simulated price per symbol.
-    This keeps your demo working even if API rate limits.
+    Generates realistic price movement when API fails.
+    Uses previous DB price if available.
     """
-    random.seed(symbol)
-    base = random.uniform(100, 300)
-    return round(base, 2)
+
+    last_price = get_last_price(symbol)
+
+    # If no previous price exists, create initial random base
+    if last_price is None:
+        base = random.uniform(100, 300)
+        return round(base, 2)
+
+    # Simulate ±1% random walk
+    percent_change = random.uniform(-0.01, 0.01)
+    new_price = last_price * (1 + percent_change)
+
+    return round(new_price, 2)
 
 
 def fetch_stock_price(symbol):

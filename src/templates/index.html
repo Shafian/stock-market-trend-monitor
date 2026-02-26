@@ -1,82 +1,80 @@
 {% extends "base.html" %}
-
 {% block content %}
 
-<div class="card">
-    <h2>Stock Analyzer</h2>
+<div class="container">
 
-    <form action="/analyze" method="POST" class="analyzer-form">
-        <input 
-            type="text" 
-            name="symbol" 
-            placeholder="Enter stock symbol (e.g. AAPL)" 
-            required
-        >
-        <button type="submit">Analyze</button>
-    </form>
-</div>
-
-<div class="card">
-    <h3>Dashboard Overview</h3>
-    <p>Use this tool to fetch live stock prices and store them in the database.</p>
-</div>
-
-<div class="card-grid">
-
-    <div class="card stat-card">
-        <h4>Total Searches</h4>
-        <p class="stat-value">{{ total_searches or 0 }}</p>
+    <!-- Analyzer Section -->
+    <div class="card analyzer-card">
+        <h2>📊 Stock Analyzer</h2>
+        <form method="POST" action="/analyze" class="analyzer-form">
+            <input type="text" name="symbol" placeholder="Enter stock symbol (e.g. AAPL)" required>
+            <button type="submit">Analyze</button>
+        </form>
     </div>
 
-    <div class="card stat-card">
-        <h4>Last Stock Checked</h4>
-        <p class="stat-value">{{ last_symbol or "None yet" }}</p>
+    <!-- Metrics Row -->
+    <div class="metrics-grid">
+
+        <div class="metric-card">
+            <h4>Total Searches</h4>
+            <p class="metric-value">
+                {{ total_searches if total_searches else 0 }}
+            </p>
+        </div>
+
+        <div class="metric-card">
+            <h4>Last Stock Checked</h4>
+            <p class="metric-value">
+                {{ last_symbol if last_symbol else "N/A" }}
+            </p>
+        </div>
+
+        <div class="metric-card">
+            <h4>Average Price</h4>
+            <p class="metric-value">
+                {% if average_price %}
+                    ${{ "%.2f"|format(average_price) }}
+                {% else %}
+                    $0.00
+                {% endif %}
+            </p>
+        </div>
+
     </div>
 
-    <div class="card stat-card">
-        <h4>Average Price</h4>
-        <p class="stat-value">
-            {% if average_price %}
-                ${{ "%.2f"|format(average_price) }}
-            {% else %}
-                N/A
-            {% endif %}
-        </p>
+    <!-- Latest Searches Table -->
+    <div class="card">
+        <h3>📈 Latest 3 Stock Searches</h3>
+
+        <table class="stock-table">
+            <thead>
+                <tr>
+                    <th>Symbol</th>
+                    <th>Price</th>
+                    <th>Trend</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% if latest_three %}
+                    {% for stock in latest_three %}
+                    <tr>
+                        <td>{{ stock.symbol }}</td>
+                        <td>${{ "%.2f"|format(stock.price) }}</td>
+                        <td>{{ stock.trend }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="3">No stock searches yet.</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+
+        </table>
+
     </div>
 
 </div>
-
-{% if latest_three %}
-<div class="card" style="margin-top:20px;">
-    <h3>📊 Latest 3 Stock Searches</h3>
-
-    <table style="width:100%; border-collapse: collapse;">
-        <thead>
-            <tr style="border-bottom:1px solid #ddd;">
-                <th style="text-align:left;">Symbol</th>
-                <th style="text-align:left;">Price</th>
-                <th style="text-align:left;">Trend</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for item in latest_three %}
-            <tr style="border-bottom:1px solid #eee;">
-                <td>{{ item["symbol"] }}</td>
-                <td>${{ "%.2f"|format(item["price"]) }}</td>
-                <td>
-                    {% if item["trend"] == "UP" %}
-                        <span style="color:green; font-weight:bold;">📈 UP</span>
-                    {% elif item["trend"] == "DOWN" %}
-                        <span style="color:red; font-weight:bold;">📉 DOWN</span>
-                    {% else %}
-                        <span style="color:gray;">➖ STABLE</span>
-                    {% endif %}
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-</div>
-{% endif %}
 
 {% endblock %}
