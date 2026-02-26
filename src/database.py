@@ -103,7 +103,7 @@ def fetch_stock_price(symbol):
 
             # 🔥 NEW LOGIC:
             # If API returns same price as last stored, simulate small movement
-            if last_price and abs(api_price - last_price) < 0.01:
+            if last_price and abs(api_price - last_price) < 0.10:
                 logging.info("API returned same price — simulating small movement.")
                 percent_change = random.uniform(-0.005, 0.005)  # ±0.5%
                 simulated_price = last_price * (1 + percent_change)
