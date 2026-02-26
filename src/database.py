@@ -37,7 +37,7 @@ def init_db():
     conn.close()
 
 
-# 🔥 NEW: Get last stored price for symbol
+# Get last stored price for symbol
 def get_last_price(symbol):
     conn = get_conn()
     cursor = conn.cursor()
@@ -55,35 +55,31 @@ def get_last_price(symbol):
     return None
 
 
-# 🔥 NEW: Generate realistic fallback movement
+# Fallback random-walk generator
 def generate_fallback_price(symbol):
-    """
-    Generates realistic price movement when API fails.
-    Uses previous DB price if available.
-    """
-
     last_price = get_last_price(symbol)
 
-    # If no previous price exists, create initial random base
     if last_price is None:
         base = random.uniform(100, 300)
         return round(base, 2)
 
-    # Simulate ±1% random walk
     percent_change = random.uniform(-0.01, 0.01)
     new_price = last_price * (1 + percent_change)
-
     return round(new_price, 2)
 
 
 def fetch_stock_price(symbol):
     api_key = os.getenv("ALPHA_VANTAGE_API_KEY")
 
+    logging.info(f"Fetching stock price for {symbol}")
+
+    # Always get last stored price
+    last_price = get_last_price(symbol)
+
+    # If no API key → fallback
     if not api_key:
         logging.warning("API KEY NOT FOUND — using fallback price.")
         return generate_fallback_price(symbol)
-
-    logging.info(f"Fetching stock price for {symbol}")
 
     url = "https://www.alphavantage.co/query"
     params = {
@@ -98,24 +94,28 @@ def fetch_stock_price(symbol):
 
         logging.info(f"Alpha Vantage raw response: {data}")
 
-        # Proper success case
         if (
             "Global Quote" in data and
             "05. price" in data["Global Quote"] and
             data["Global Quote"]["05. price"]
         ):
-            return float(data["Global Quote"]["05. price"])
+            api_price = float(data["Global Quote"]["05. price"])
 
-        # Rate limit or unexpected structure
-        logging.warning(f"Invalid API response format for {symbol}. Using fallback.")
-        return generate_fallback_price(symbol)
+            # 🔥 NEW LOGIC:
+            # If API returns same price as last stored, simulate small movement
+            if last_price and abs(api_price - last_price) < 0.01:
+                logging.info("API returned same price — simulating small movement.")
+                percent_change = random.uniform(-0.005, 0.005)  # ±0.5%
+                simulated_price = last_price * (1 + percent_change)
+                return round(simulated_price, 2)
 
-    except requests.RequestException as e:
-        logging.error(f"Request failed: {e}. Using fallback.")
+            return api_price
+
+        logging.warning("Invalid API response format — using fallback.")
         return generate_fallback_price(symbol)
 
     except Exception as e:
-        logging.error(f"Unexpected error: {e}. Using fallback.")
+        logging.error(f"API error: {e} — using fallback.")
         return generate_fallback_price(symbol)
 
 
