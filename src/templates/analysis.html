@@ -9,17 +9,37 @@
     <p>Detailed price history, trend, and performance breakdown.</p>
   </div>
 
-  <!-- SYMBOL SELECTOR -->
+  <!-- SYMBOL SELECTOR + NEW SEARCH -->
   <div class="card">
-    <h3>Select Stock</h3>
+    <h3>Select or Analyze New Stock</h3>
 
-    <select id="symbolSelect">
-      {% for sym in all_symbols %}
-        <option value="{{ sym }}" {% if sym == symbol %}selected{% endif %}>
-          {{ sym }}
-        </option>
-      {% endfor %}
-    </select>
+    <!-- Previously searched dropdown -->
+    <div style="margin-bottom:20px;">
+      <label style="font-weight:bold;">Previously Searched:</label><br>
+      <select id="symbolSelect" style="margin-top:8px;">
+        {% for sym in all_symbols %}
+          <option value="{{ sym }}" {% if sym == symbol %}selected{% endif %}>
+            {{ sym }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- New stock input -->
+    <div>
+      <label style="font-weight:bold;">Analyze New Symbol:</label>
+      <form action="/analyze" method="POST" style="margin-top:8px; display:flex; gap:10px;">
+        <input 
+          type="text" 
+          name="symbol"
+          placeholder="Enter stock symbol (e.g. TSLA)"
+          required
+          style="padding:10px; border-radius:6px; border:1px solid #ccc;"
+          oninput="this.value = this.value.toUpperCase();"
+        >
+        <button type="submit">Analyze</button>
+      </form>
+    </div>
   </div>
 
   <!-- SUMMARY METRICS -->
@@ -123,11 +143,15 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
+  // Dropdown change
   const select = document.getElementById("symbolSelect");
-  select.addEventListener("change", function() {
-    window.location.href = "/analysis/" + this.value;
-  });
+  if (select) {
+    select.addEventListener("change", function() {
+      window.location.href = "/analysis/" + this.value;
+    });
+  }
 
+  // Chart
   const canvas = document.getElementById("priceChart");
   const labels = JSON.parse(canvas.dataset.labels || "[]");
   const prices = JSON.parse(canvas.dataset.prices || "[]");
